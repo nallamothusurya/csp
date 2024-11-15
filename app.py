@@ -5,6 +5,8 @@ import os
 import textwrap
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from functools import lru_cache
+from multiprocessing import Pool
 
 # Configuration
 GOOGLE_API_KEY = "AIzaSyAbmkh8cRl9OpBs5MpmB3mGjXsusV-BtUo"
@@ -17,21 +19,29 @@ chat = model.start_chat(history=[])
 # Path to the folder containing PDF files
 PDF_FOLDER_PATH = "data"  # Folder containing PDF files
 
+# Flask app
+app = Flask(__name__)
+
+# Global storage for preprocessed PDF text
+PDF_TEXT_CHUNKS = []
+
+# Extract text from a single PDF
 def extract_text_from_pdf(pdf_path):
-    doc = fitz.open(pdf_path)
-    text = ""
-    for page in doc:
-        text += page.get_text("text")
-    return text
+    try:
+        doc = fitz.open(pdf_path)
+        return " ".join([page.get_text("text") for page in doc])
+    except Exception as e:
+        print(f"Error extracting text from {pdf_path}: {e}")
+        return ""
 
-def extract_text_from_pdfs_in_folder(folder_path):
-    combined_text = ""
-    for filename in os.listdir(folder_path):
-        if filename.endswith('.pdf'):
-            pdf_path = os.path.join(folder_path, filename)
-            combined_text += extract_text_from_pdf(pdf_path) + "\n\n"  # Adding a space between PDFs
-    return combined_text
+# Parallelized extraction of text from all PDFs in a folder
+def extract_text_parallel(folder_path):
+    files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith('.pdf')]
+    with Pool() as pool:
+        results = pool.map(extract_text_from_pdf, files)
+    return "\n\n".join(results)
 
+# Deduplicate text based on cosine similarity
 def deduplicate_text(texts):
     vectorizer = TfidfVectorizer().fit_transform(texts)
     cosine_sim = cosine_similarity(vectorizer)
@@ -39,16 +49,18 @@ def deduplicate_text(texts):
     for i in range(len(texts)):
         if keep[i]:
             for j in range(i + 1, len(texts)):
-                if cosine_sim[i, j] > 0.9:  # Consider passages as duplicates if similarity > 90%
+                if cosine_sim[i, j] > 0.9:
                     keep[j] = False
     return [text for text, flag in zip(texts, keep) if flag]
 
+# Preprocess and chunk text into smaller parts
 def preprocess_and_chunk_text(text, max_chunk_size=1000):
     text = text.strip().replace("\n", " ")
     return textwrap.wrap(text, max_chunk_size)
 
+# Find the most relevant text chunk for a query
 def find_relevant_pdf_text(user_query, pdf_text_chunks):
-    vectorizer = TfidfVectorizer()
+    vectorizer = TfidfVectorizer(max_features=5000)  # Limit features for optimization
     all_texts = [user_query] + pdf_text_chunks
     tfidf_matrix = vectorizer.fit_transform(all_texts)
     cosine_sim = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:])
@@ -59,8 +71,20 @@ def find_relevant_pdf_text(user_query, pdf_text_chunks):
     )
     return relevant_chunks[0][0]
 
-# Flask routes
-app = Flask(__name__)
+# Cache AI responses
+@lru_cache(maxsize=100)
+def cached_ai_response(context):
+    return chat.send_message(context).text
+
+# Preprocess PDFs once during app startup
+@app.before_first_request
+def initialize_pdf_text():
+    global PDF_TEXT_CHUNKS
+    print("Initializing PDF text...")
+    pdf_text = extract_text_parallel(PDF_FOLDER_PATH)
+    pdf_chunks = preprocess_and_chunk_text(pdf_text)
+    PDF_TEXT_CHUNKS = deduplicate_text(pdf_chunks)
+    print("PDF text initialization complete.")
 
 @app.route('/')
 def index():
@@ -75,19 +99,13 @@ def chat_response():
         return jsonify({"error": "No message provided"}), 400
 
     try:
-        pdf_text = extract_text_from_pdfs_in_folder(PDF_FOLDER_PATH)
-        pdf_chunks = preprocess_and_chunk_text(pdf_text)
-
-        # Deduplicate the PDF text
-        pdf_chunks = deduplicate_text(pdf_chunks)
-
-        # Find the most relevant chunk of text based on the user's query
-        relevant_text = find_relevant_pdf_text(user_input, pdf_chunks)
+        # Find the most relevant chunk of text
+        relevant_text = find_relevant_pdf_text(user_input, PDF_TEXT_CHUNKS)
 
         # Combine relevant PDF content with the user's query as context for Gemini AI
         context = relevant_text + "\nUser's question: " + user_input
-        response_raw = chat.send_message(context)
-        response_text = format_response(response_raw.text)
+        response_raw = cached_ai_response(context)
+        response_text = format_response(response_raw)
 
         return jsonify({"response": response_text})
     except Exception as e:
@@ -95,8 +113,7 @@ def chat_response():
         return jsonify({"error": "An error occurred while processing your request."}), 500
 
 def format_response(text):
-    formatted_text = text.replace('\n', '<br>').replace("**", " ").replace("*", "• ")
-    return f"<strong></strong><br>{formatted_text}"
+    return text.replace('\n', '<br>').replace("**", " ").replace("*", "• ")
 
 if __name__ == '__main__':
     app.run(debug=True)
