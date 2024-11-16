@@ -4,204 +4,274 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medical Bot</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-      body, html {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    font-family: 'Roboto', Arial, sans-serif;
-    background: linear-gradient(135deg, #74ebd5, #acb6e5);
-    color: #333;
-}
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7fb;
+        }
+
         .chat-container {
             display: flex;
             flex-direction: column;
-            height: 89vh;
-            max-width: 600px;
-            margin: auto;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            justify-content: space-between;
+            width: 100%;
+            max-width: 850px;
+            height: 90vh;
+            margin: 20px auto;
             background-color: #ffffff;
             border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
+
         .chat-header {
+            background-color: #0061F2;
+            color: #ffffff;
             padding: 20px;
-            background-color: #007bff;
-            color: rgb(253, 255, 248);
             text-align: center;
-            font-weight: 600;
-            font-size: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 22px;
+            font-weight: bold;
         }
+
         .chat-body {
-            flex-grow: 1;
-            padding: 15px;
+            flex: 1;
+            padding: 20px;
             overflow-y: auto;
-            background-color: #e9ecef;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding-right: 10px;
         }
+
         .chat-message {
             display: flex;
-            align-items: center;
-            margin: 10px 0;
+            align-items: flex-start;
+            max-width: 75%;
             padding: 12px;
             border-radius: 20px;
-            max-width: 75%;
-            transition: transform 0.3s ease;
+            font-size: 16px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        .chat-message:hover {
-            transform: translateY(-2px);
-        }
+
         .chat-message.user {
-            background-color: #007bff;
-            color: white;
-            align-self: flex-end;
-            border-top-right-radius: 0;
+            background-color: #d1f7d7;
+            align-self: flex-start; /* Aligning user messages to the left */
         }
+
         .chat-message.bot {
-            background-color: #ffffff;
-            color: #333;
-            align-self: flex-start;
-            border-top-left-radius: 0;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background-color: #e0e5ff;
+            align-self: flex-end; /* Aligning bot messages to the right */
         }
-        .chat-message img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
+
         .chat-footer {
+            display: flex;
+            justify-content: space-between;
             padding: 15px;
-            background-color: #ffffff;
-            display: flex;
-            align-items: center;
-            border-top: 1px solid #ddd;
+            background-color: #f9f9f9;
+            border-top: 1px solid #e1e1e1;
+            position: relative;
         }
-        .chat-footer input {
-            flex-grow: 1;
-            margin-right: 10px;
+
+        .input-wrapper {
+            display: flex;
+            width: 100%;
+        }
+
+        .form-control {
+            width: 80%;
+            padding: 12px;
+            font-size: 16px;
             border-radius: 30px;
-            padding: 12px 20px;
-            border: 1px solid #696969;
-            font-size: 1rem;
+            border: 1px solid #ccc;
         }
-        .chat-footer input:focus {
-            border-color: #007bff;
+
+        .form-control:focus {
+            border-color: #0061F2;
             outline: none;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
         }
-        .chat-footer button {
-            width: 50px;
-            height: 50px;
-            background-color: #007bff;
-            color: white;
+
+        .send-button {
+            background-color: #0061F2;
+            color: #fff;
             border: none;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 22px;
+            padding: 12px 20px;
+            border-radius: 30px;
             cursor: pointer;
-            transition: transform 0.3s ease, background-color 0.3s ease;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+            margin-left: 10px; /* Add margin to separate the button from the input */
         }
-        .chat-footer button:hover {
-            background-color: #0056b3;
-            transform: scale(1.1);
+
+        .send-button i {
+            margin-right: 8px;
         }
-        .chat-footer button:active {
-            transform: scale(1);
+
+        .send-button:hover {
+            background-color: #0052c4;
         }
+
+        /* Typing Animation */
+        .bot-typing {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: #0061F2;
+            border-radius: 50%;
+            animation: typing 1.2s infinite ease-in-out;
+        }
+
+        .dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* Mobile Responsiveness */
         @media (max-width: 768px) {
             .chat-container {
-                width: 90%;
-                border-radius: 8px;
+                margin: 10px;
+                height: 95vh;
             }
-            .chat-footer button {
-                width: 45px;
-                height: 45px;
+
+            .form-control {
+                width: 70%;
+            }
+
+            .send-button {
+                width: 25%;
+            }
+
+            .chat-footer {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+
+            .chat-header {
+                font-size: 18px;
+            }
+
+            .chat-body {
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .chat-message {
+                font-size: 14px;
             }
         }
-        @media (max-width: 576px) {
-            .chat-header {
-                font-size: 1.2rem;
-                padding: 15px;
-            }
-            .chat-footer input {
-                font-size: 0.9rem;
-            }
+
+        /* Scrollbar Styling */
+        .chat-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-body::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 8px;
+        }
+
+        .chat-body::-webkit-scrollbar-thumb:hover {
+            background-color: #888;
         }
     </style>
 </head>
 <body>
 
-    <div class="chat-container">
-        <div class="chat-header">
-            Medical AI For CSP
-        </div>
+<div class="chat-container">
+    <div class="chat-header">
+        Medical AI For CSP
+    </div>
 
-        <div class="chat-body" id="chat-body">
-            <!-- Messages will dynamically load here -->
-        </div>
+    <div class="chat-body" id="chat-body">
+        <!-- Chat messages will go here -->
+    </div>
 
-        <div class="chat-footer">
-            <input type="text" class="form-control" id="message-input" placeholder="Message Camel AI">
+    <div class="chat-footer">
+        <div class="input-wrapper">
+            <input type="text" class="form-control" id="message-input" placeholder="Type your message...">
             <button class="send-button" id="send-button">
-                <i class="fas fa-paper-plane"></i>
+                <i class="fas fa-paper-plane"></i> Send
             </button>
         </div>
     </div>
+</div>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('#send-button').click(sendMessage);
-            $('#message-input').keypress(function (e) {
-                if (e.which === 13) sendMessage();
-            });
-
-            function sendMessage() {
-                const userMessage = $('#message-input').val().trim();
-                if (userMessage) {
-                    const chatBody = $('#chat-body');
-                    chatBody.append(
-                        `<div class="chat-message user"><img src="static/user.png" alt="User Avatar">${userMessage}</div>`
-                    );
-
-                    $('#message-input').val("");
-                    chatBody.scrollTop(chatBody[0].scrollHeight);
-
-                    // Placeholder for bot response
-                    chatBody.append(
-                        `<div class="chat-message bot"><img src="static/bot.png" alt="Bot Avatar"><span>Thinking...</span></div>`
-                    );
-                    chatBody.scrollTop(chatBody[0].scrollHeight);
-
-                    // Simulate bot response delay
-                    setTimeout(() => {
-                        $.ajax({
-                            url: '/chat',
-                            type: 'POST',
-                            contentType: 'application/json',
-                            data: JSON.stringify({ message: userMessage }),
-                            success(response) {
-                                $('.chat-message.bot').last().html(
-                                    `<img src="static/bot.png" alt="Bot Avatar">${response.response}`
-                                );
-                                chatBody.scrollTop(chatBody[0].scrollHeight);
-                            },
-                            error() {
-                                $('.chat-message.bot').last().html(
-                                    `<img src="static/bot.png" alt="Bot Avatar">Oops! Something went wrong.`
-                                );
-                            }
-                        });
-                    }, 1000);
-                }
-            }
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#send-button').click(sendMessage);
+        $('#message-input').keypress(function (e) {
+            if (e.which === 13) sendMessage();  // Enter key triggers send
         });
-    </script>
+
+        function sendMessage() {
+            const userMessage = $('#message-input').val().trim();
+            if (userMessage) {
+                const chatBody = $('#chat-body');
+                chatBody.append(
+                    `<div class="chat-message user">${userMessage}</div>`
+                );
+
+                $('#message-input').val(""); // Clear the input field
+                chatBody.scrollTop(chatBody[0].scrollHeight);
+
+                // Typing animation for the bot
+                chatBody.append(
+                    `<div class="bot-typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`
+                );
+                chatBody.scrollTop(chatBody[0].scrollHeight);
+
+                // Simulating bot response with AJAX (mocked here for demonstration)
+                $.ajax({
+                    url: '/chat',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ query: userMessage }),
+                    success(response) {
+                        const botResponse = response.response || "Sorry, something went wrong.";
+                        $('.bot-typing').last().remove();
+                        chatBody.append(
+                            `<div class="chat-message bot">${botResponse}</div>`
+                        );
+                        chatBody.scrollTop(chatBody[0].scrollHeight);
+                    },
+                    error() {
+                        $('.bot-typing').last().remove();
+                        chatBody.append(
+                            `<div class="chat-message bot">Sorry, something went wrong.</div>`
+                        );
+                    }
+                });
+            }
+        }
+    });
+</script>
+
 </body>
 </html>
