@@ -18,7 +18,7 @@ app = Flask(__name__, static_folder='static')  # Ensure static folder is set for
 CORS(app)  # Enable CORS for handling external resources
 
 # List of prohibited words
-DISALLOWED_WORDS = ["adult", "sex", "porn", "explicit", "nude", "erotic", "xxx","bikini","lust"]
+DISALLOWED_WORDS = ["adult", "sex", "porn", "nude", "xxx","bikini","lust","ullu","xhamster","boobs","rape"]
 
 def contains_prohibited_content(text):
     """
