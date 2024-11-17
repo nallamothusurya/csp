@@ -14,11 +14,14 @@ model = genai.GenerativeModel('gemini-pro')
 chat_model = model.start_chat(history=[])
 
 # Initialize Flask app
-app = Flask(__name__, static_folder='static')  # Ensure static folder is set for images
+app = Flask(__name__, static_folder='static')
 CORS(app)  # Enable CORS for handling external resources
 
 # List of prohibited words
-DISALLOWED_WORDS = ["adult", "sex", "porn", "nude", "xxx","bikini","lust","ullu","xhamster","boobs","rape","fuck"]
+DISALLOWED_WORDS = [
+    "adult", "sex", "porn", "nude", "xxx", "bikini", "lust",
+    "ullu", "xhamster", "boobs", "rape", "fuck"
+]
 
 def contains_prohibited_content(text):
     """
@@ -33,7 +36,6 @@ def contains_prohibited_content(text):
 def format_response(gemini_response):
     """
     Format the generative AI response for better readability.
-    Adds markdown formatting for headings, bullet points, etc.
     """
     formatted_response = ""
     lines = gemini_response.split('\n')
@@ -50,7 +52,6 @@ def format_response(gemini_response):
 def get_top_image(query):
     """
     Scrape the top image URL from Bing for a given query.
-    Ensures the image URL is fully qualified.
     """
     search_url = f"https://www.bing.com/images/search?q={query}&form=HDRSC2"
     headers = {
@@ -82,11 +83,13 @@ def chat():
             return jsonify({"response": "Your query contains inappropriate content. Please try again with appropriate language."})
 
         try:
-            if "image" in query.lower():
+            if any(word in query.lower() for word in ["image", "photo", "logo"]):
                 # Extract the top image from Bing
                 image_url = get_top_image(query)
                 if image_url:
-                    return jsonify({"response": f"<img src='{image_url}' alt='Try again {query}' style='max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);' />"})
+                    return jsonify({
+                        "response": f"<img src='{image_url}' alt='{query}' style='max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);' />"
+                    })
                 else:
                     return jsonify({"response": "Could not fetch image. Try another query."})
             else:
