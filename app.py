@@ -3,6 +3,7 @@ import google.generativeai as genai
 from markdown import markdown
 from bs4 import BeautifulSoup
 import requests
+from flask_cors import CORS
 
 # Hardcode the Generative AI API key directly in the code
 API_KEY = "AIzaSyAbmkh8cRl9OpBs5MpmB3mGjXsusV-BtUo"
@@ -13,7 +14,8 @@ model = genai.GenerativeModel('gemini-pro')
 chat_model = model.start_chat(history=[])
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')  # Ensure static folder is set for images
+CORS(app)  # Enable CORS for handling external resources
 
 def format_response(gemini_response):
     """
@@ -37,6 +39,7 @@ def format_response(gemini_response):
 def get_top_image(query):
     """
     Function to scrape the top image URL from Bing for a given query.
+    Now ensuring that the image URL is fully qualified.
     """
     search_url = f"https://www.bing.com/images/search?q={query}&form=HDRSC2"
     headers = {
@@ -47,7 +50,11 @@ def get_top_image(query):
     soup = BeautifulSoup(response.content, "html.parser")
     image_tag = soup.find("img", class_="mimg")
     if image_tag and image_tag.get("src"):
-        return image_tag["src"]
+        # Ensure the URL is complete
+        image_url = image_tag["src"]
+        if not image_url.startswith("http"):
+            image_url = "https://www.bing.com" + image_url
+        return image_url
     return None
 
 @app.route("/")
