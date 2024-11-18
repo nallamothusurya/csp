@@ -60,13 +60,13 @@
 
         .chat-message.user {
             background-color: #3fff85;
-            align-self: flex-start; /* Aligning user messages to the left */
+            align-self: flex-start;
             border: 0.2px solid #acacac;
         }
 
         .chat-message.bot {
             background-color: #ffffff;
-            align-self: flex-end; /* Aligning bot messages to the right */
+            align-self: flex-end;
             border: 0.2px solid #acacac;
         }
 
@@ -109,7 +109,7 @@
             align-items: center;
             justify-content: center;
             transition: background-color 0.3s ease;
-            margin-left: 10px; /* Add margin to separate the button from the input */
+            margin-left: 10px;
         }
 
         .send-button i {
@@ -120,7 +120,6 @@
             background-color: #0052c4;
         }
 
-        /* Typing Animation */
         .bot-typing {
             display: flex;
             gap: 6px;
@@ -153,7 +152,6 @@
             100% { opacity: 0; }
         }
 
-        /* Mobile Responsiveness */
         @media (max-width: 768px) {
             .chat-container {
                 margin: 10px;
@@ -187,7 +185,6 @@
             }
         }
 
-        /* Scrollbar Styling */
         .chat-body::-webkit-scrollbar {
             width: 8px;
         }
@@ -201,10 +198,9 @@
             background-color: #888;
         }
 
-        /* Image Styling */
         .chat-message img {
-            max-width: 100%;
-            max-height: 250px;
+            max-width: 500px;
+            max-height: auto;
             object-fit: contain;
             border-radius: 10px;
             margin-top: 10px;
@@ -224,8 +220,8 @@
 
     <div class="chat-footer">
         <div class="input-wrapper">
-            <input type="text" class="form-control" id="message-input" placeholder="Type your message...">
-            <button class="send-button" id="send-button">
+            <input type="text" class="form-control" id="message-input" placeholder="Type your message..." aria-label="Message input">
+            <button class="send-button" id="send-button" aria-label="Send message">
                 <i class="fas fa-paper-plane"></i> Send
             </button>
         </div>
@@ -242,61 +238,63 @@
 
         function sendMessage() {
             const userMessage = $('#message-input').val().trim();
-            if (userMessage) {
-                const chatBody = $('#chat-body');
-                chatBody.append(
-                    `<div class="chat-message user">${userMessage}</div>`
-                );
+            if (userMessage.length === 0) {
+                return;  // Don't send empty or just-whitespace messages
+            }
 
-                $('#message-input').val(""); // Clear the input field
-                chatBody.scrollTop(chatBody[0].scrollHeight);
+            const chatBody = $('#chat-body');
+            chatBody.append(
+                `<div class="chat-message user">${userMessage}</div>`
+            );
 
-                // Typing animation for the bot
-                chatBody.append(
-                    `<div class="bot-typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`
-                );
-                chatBody.scrollTop(chatBody[0].scrollHeight);
+            $('#message-input').val(""); // Clear the input field
+            chatBody.scrollTop(chatBody[0].scrollHeight);
 
-                // Simulating bot response with AJAX (mocked here for demonstration)
-                $.ajax({
-                    url: '/chat',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ query: userMessage }),
-                    success(response) {
-                        const botResponse = response.response || "Sorry, something went wrong.";
+            // Typing animation for the bot
+            chatBody.append(
+                `<div class="bot-typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`
+            );
+            chatBody.scrollTop(chatBody[0].scrollHeight);
 
-                        // Check if the bot's response contains an image URL
-                        if (response.image) {
-                            // Display image response
-                            $('.bot-typing').last().remove();
-                            chatBody.append(
-                                `<div class="chat-message bot"><img src="${response.image}" alt="Image response"></div>`
-                            );
-                            // After image, append the text response
-                            chatBody.append(
-                                `<div class="chat-message bot">${botResponse}</div>`
-                            );
-                        } else {
-                            // Display text response if no image
-                            $('.bot-typing').last().remove();
-                            chatBody.append(
-                                `<div class="chat-message bot">${botResponse}</div>`
-                            );
-                        }
+            // Simulating bot response with AJAX (mocked here for demonstration)
+            $.ajax({
+                url: '/chat',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ query: userMessage }),
+                success(response) {
+                    const botResponse = response.response || "Sorry, something went wrong.";
 
-                        // Scroll to the bottom after bot response is added
-                        chatBody.scrollTop(chatBody[0].scrollHeight);
-                    },
-                    error() {
+                    // Check if the bot's response contains an image URL
+                    if (response.image) {
+                        // Display image response
                         $('.bot-typing').last().remove();
                         chatBody.append(
-                            `<div class="chat-message bot">Sorry, something went wrong.</div>`
+                            `<div class="chat-message bot"><img src="${response.image}" alt="Image response"></div>`
                         );
-                        chatBody.scrollTop(chatBody[0].scrollHeight);
+                        // After image, append the text response
+                        chatBody.append(
+                            `<div class="chat-message bot">${botResponse}</div>`
+                        );
+                    } else {
+                        // Display text response if no image
+                        $('.bot-typing').last().remove();
+                        chatBody.append(
+                            `<div class="chat-message bot">${botResponse}</div>`
+                        );
                     }
-                });
-            }
+
+                    // Scroll to the bottom after bot response is added
+                    chatBody.scrollTop(chatBody[0].scrollHeight);
+                },
+                error() {
+                    $('.bot-typing').last().remove();
+                    chatBody.append(
+                        `<div class="chat-message bot">Sorry, something went wrong.</div>`
+                    );
+                    chatBody.scrollTop(chatBody[0].scrollHeight);
+                }
+            });
         }
     });
 </script>

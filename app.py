@@ -6,7 +6,12 @@ import requests
 from flask_cors import CORS
 from PIL import Image
 from io import BytesIO
+import logging
 
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Hardcoded API Key (not recommended for production)
 API_KEY = "AIzaSyAbmkh8cRl9OpBs5MpmB3mGjXsusV-BtUo"
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel('gemini-pro')
@@ -15,12 +20,12 @@ chat_model = model.start_chat(history=[])
 app = Flask(__name__, static_folder='static')
 CORS(app)
 
-DISALLOWED_WORDS = [
-    "adult", "sex", "porn", "nude", "xxx", "bikini", "lust",
-    "ullu", "xhamster", "boobs", "rape", "fuck", "boob"
+DISALLOWED_WORDS = [ "sex", "porn", "nude", "xxx", "bikini", "lust",
+    "ullu", "xhamster", "boobs", "rape", "fuck", "boob","boobs"
 ]
 
 def contains_prohibited_content(text):
+    """Check if the text contains any disallowed words."""
     text_lower = text.lower()
     for word in DISALLOWED_WORDS:
         if word in text_lower:
@@ -28,6 +33,7 @@ def contains_prohibited_content(text):
     return False
 
 def format_response(gemini_response):
+    """Format the response from the generative model into Markdown."""
     formatted_response = ""
     lines = gemini_response.split('\n')
     for line in lines:
@@ -41,6 +47,7 @@ def format_response(gemini_response):
     return formatted_response
 
 def get_top_images(query):
+    """Fetch top image URLs for the given query."""
     search_url = f"https://www.bing.com/images/search?q={query}&form=HDRSC2"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -61,15 +68,17 @@ def get_top_images(query):
     return image_urls
 
 def get_image_dimensions(url):
+    """Get the dimensions of the image from the URL."""
     try:
         response = requests.get(url)
         img = Image.open(BytesIO(response.content))
         return img.size
     except Exception as e:
-        print(f"Error getting image dimensions for {url}: {str(e)}")
+        app.logger.error(f"Error getting image dimensions for {url}: {str(e)}")
         return (0, 0)
 
 def get_best_image(query):
+    """Get the best image URL based on dimensions."""
     image_urls = get_top_images(query)
     if not image_urls:
         return None
@@ -87,32 +96,39 @@ def get_best_image(query):
 
 @app.route("/")
 def home():
+    """Render the homepage."""
     return render_template("index.html")
 
 @app.route("/chat", methods=['POST'])
 def chat():
+    """Handle chat request and respond with a message or image."""
     if request.method == 'POST':
         query = request.json.get('query', '').strip()
         if not query:
             return jsonify({"response": "Please enter something!"})
         if contains_prohibited_content(query):
             return jsonify({"response": "Your query contains inappropriate content. Please try again with appropriate language."})
+        
         try:
-            if any(word in query.lower() for word in ["image", "photo", "logo"]):
+            # Check if the query asks for images
+            if any(word in query.lower() for word in ["image", "photo", "logo","pic","pics"]):
                 best_image_url = get_best_image(query)
                 if best_image_url:
                     return jsonify({
                         "response": f"<div class='chat-image'><img src='{best_image_url}' alt='{query}'  /></div>"
                     })
                 else:
-                    return jsonify({"response": "Could not fetch image. Try another query."})
+                    return jsonify({"response": "Could Generate image. Try another query."})
             else:
+                # Get the model's text response
                 gemini_response = chat_model.send_message(query).text
                 formatted_response = format_response(gemini_response)
+                # Send the response formatted in Markdown (which will be converted to HTML on the frontend)
                 return jsonify({
                     "response": f"<div class='chat-text'>{markdown(formatted_response)}</div>"
                 })
         except Exception as e:
+            app.logger.error(f"Error during chat processing: {str(e)}")
             return jsonify({"response": f"Something went wrong: {str(e)}"})
     return jsonify({"response": "Invalid request."})
 
