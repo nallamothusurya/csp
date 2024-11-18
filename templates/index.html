@@ -43,7 +43,6 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            overflow-x: auto;
             padding-right: 10px;
         }
 
@@ -69,7 +68,6 @@
             background-color: #ffffff;
             align-self: flex-end; /* Aligning bot messages to the right */
             border: 0.2px solid #acacac;
-
         }
 
         .chat-footer {
@@ -202,6 +200,15 @@
         .chat-body::-webkit-scrollbar-thumb:hover {
             background-color: #888;
         }
+
+        /* Image Styling */
+        .chat-message img {
+            max-width: 100%;
+            max-height: 250px;
+            object-fit: contain;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -258,10 +265,27 @@
                     data: JSON.stringify({ query: userMessage }),
                     success(response) {
                         const botResponse = response.response || "Sorry, something went wrong.";
-                        $('.bot-typing').last().remove();
-                        chatBody.append(
-                            `<div class="chat-message bot">${botResponse}</div>`
-                        );
+
+                        // Check if the bot's response contains an image URL
+                        if (response.image) {
+                            // Display image response
+                            $('.bot-typing').last().remove();
+                            chatBody.append(
+                                `<div class="chat-message bot"><img src="${response.image}" alt="Image response"></div>`
+                            );
+                            // After image, append the text response
+                            chatBody.append(
+                                `<div class="chat-message bot">${botResponse}</div>`
+                            );
+                        } else {
+                            // Display text response if no image
+                            $('.bot-typing').last().remove();
+                            chatBody.append(
+                                `<div class="chat-message bot">${botResponse}</div>`
+                            );
+                        }
+
+                        // Scroll to the bottom after bot response is added
                         chatBody.scrollTop(chatBody[0].scrollHeight);
                     },
                     error() {
@@ -269,12 +293,12 @@
                         chatBody.append(
                             `<div class="chat-message bot">Sorry, something went wrong.</div>`
                         );
+                        chatBody.scrollTop(chatBody[0].scrollHeight);
                     }
                 });
             }
         }
     });
 </script>
-
 </body>
 </html>
