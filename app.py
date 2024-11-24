@@ -17,7 +17,7 @@ CORS(app)
 
 DISALLOWED_WORDS = [
     "adult", "sex", "porn", "nude", "xxx", "bikini", "lust",
-    "ullu", "xhamster", "boobs", "rape", "fuck", "boob"
+    "ullu", "xhamster", "boobs", "rape", "fuck", "boob", "hot"
 ]
 
 def contains_prohibited_content(text):
@@ -57,15 +57,13 @@ def format_response(gemini_response):
     return formatted_response
 
 def apply_syntax_highlighting(code):
-    # Define general patterns for multiple languages
-    keywords = r'\b(def|class|if|else|elif|for|while|import|from|try|except|return|break|continue|function|var|let|const|print|echo|public|private|protected|static|void|new|extends|implements|print)\b'
+    # Define general patterns for multiple datatypes
     strings = r'(\"[^\"]*\"|\'[^\']*\')'  # Match both double and single-quoted strings
     comments = r'(#.*|\/\/.*|\/\*[\s\S]*?\*\/)'  # Match Python, JavaScript, and C-style comments
 
-    # Apply syntax highlighting
-    code = re.sub(keywords, r'<span style="color: red;">\g<0></span>', code)
+    # Apply blue color to datatypes
     code = re.sub(strings, r'<span style="color: red;">\g<0></span>', code)
-    code = re.sub(comments, r'<span style="color: green;">\g<0></span>', code)
+    code = re.sub(comments, r'<span style="color: #23e54d;">\g<0></span>', code)
     return code
 
 def get_top_image(query):
