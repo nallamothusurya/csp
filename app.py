@@ -5,7 +5,12 @@ from bs4 import BeautifulSoup
 import requests
 from flask_cors import CORS
 import re
+from html import escape
+from pygments import highlight
+from pygments.lexers import guess_lexer, PythonLexer
+from pygments.formatters import HtmlFormatter
 
+# Google Generative AI API Key
 API_KEY = "AIzaSyAbmkh8cRl9OpBs5MpmB3mGjXsusV-BtUo"
 
 genai.configure(api_key=API_KEY)
@@ -15,58 +20,68 @@ chat_model = model.start_chat(history=[])
 app = Flask(__name__, static_folder='static')
 CORS(app)
 
+# List of prohibited words for query filtering
 DISALLOWED_WORDS = [
     "adult", "sex", "porn", "nude", "xxx", "bikini", "lust",
     "ullu", "xhamster", "boobs", "rape", "fuck", "boob", "hot"
 ]
 
 def contains_prohibited_content(text):
+    """Check if the text contains prohibited content."""
     text_lower = text.lower()
     for word in DISALLOWED_WORDS:
         if word in text_lower:
             return True
     return False
 
+def apply_syntax_highlighting(code):
+    """Apply syntax highlighting using Pygments."""
+    try:
+        # Guess the language of the code
+        lexer = guess_lexer(code)
+    except Exception:
+        # Fallback to Python lexer if the language cannot be determined
+        lexer = PythonLexer()
+
+    # Highlight the code using HTML formatter
+    formatter = HtmlFormatter(style="monokai", nowrap=True)  # Use 'monokai' style
+    highlighted_code = highlight(code, lexer, formatter)
+
+    # Wrap in a styled container
+    return f"""
+<div style='position: relative; background-color: #171717; padding: 20px; border-radius: 12px; margin-bottom: 20px;'>
+  <button onclick="copyCode(this)" style="position: absolute; top: 10px; right: 10px; background: #007BFF; color: #fff; border: none; padding: 5px 10px; border-radius: 12px; cursor: pointer;">Copy</button>
+  <pre style='color: #f8f8f2; font-family: "Consolas", "Courier New", "Courier", monospace;
+ font-size: 1rem; white-space: pre-wrap; word-wrap: break-word;' class='code-content'>
+{highlighted_code}
+  </pre>
+</div>
+"""
+
 def format_response(gemini_response):
+    """Format the Gemini response with code highlighting."""
     formatted_response = ""
     lines = gemini_response.split('\n')
-    in_code_block = False  # Track if we are inside a code block
-    
+    in_code_block = False
+    code_block_content = []
+
     for line in lines:
         line = line.strip()
-        if line.startswith("```"):  # Start or end of a code block
+        if line.startswith("```"):
             in_code_block = not in_code_block
-            if in_code_block:
-                # Start of the code block with a "Copy" button
-                formatted_response += """
-<div style='position: relative; background-color: #1e1e1e; padding: 45px; border-radius: 12px; margin-bottom: 20px;'>
-  <button onclick="copyCode(this)" style="position: absolute; top: 10px; right: 10px; background: #007BFF; color: #fff; border: none; padding: 5px 10px; border-radius: 12px; cursor: pointer;">Copy</button>
-  <pre style='color: #f8f8f2; font-family: "Courier New", Courier, monospace; font-size: 1rem; white-space: pre-wrap; word-wrap: break-word;' class='code-content'>
-"""
-            else:
-                formatted_response += "</pre></div>"
+            if not in_code_block:
+                # Process the code block content when closing the block
+                highlighted_code = apply_syntax_highlighting("\n".join(code_block_content))
+                formatted_response += highlighted_code
+                code_block_content = []
         elif in_code_block:
-            formatted_line = apply_syntax_highlighting(line)
-            formatted_response += f"{formatted_line}\n"
-        elif line.lower().startswith("heading") or line.lower().startswith("title"):
-            formatted_response += f"## **{line}**\n\n"
-        elif line.lower().startswith("point") or line.lower().startswith("•") or line.startswith("-"):
-            formatted_response += f"- {line.lstrip('-•').strip()}\n"
-        elif line:
+            code_block_content.append(line)
+        else:
             formatted_response += f"{line}\n\n"
     return formatted_response
 
-def apply_syntax_highlighting(code):
-    # Define general patterns for multiple datatypes
-    strings = r'(\"[^\"]*\"|\'[^\']*\')'  # Match both double and single-quoted strings
-    comments = r'(#.*|\/\/.*|\/\*[\s\S]*?\*\/)'  # Match Python, JavaScript, and C-style comments
-
-    # Apply blue color to datatypes
-    code = re.sub(strings, r'<span style="color: red;">\g<0></span>', code)
-    code = re.sub(comments, r'<span style="color: #23e54d;">\g<0></span>', code)
-    return code
-
 def get_top_image(query):
+    """Fetch the top image for a query using Bing Image Search."""
     search_url = f"https://www.bing.com/images/search?q={query}&form=HDRSC2"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -83,10 +98,12 @@ def get_top_image(query):
 
 @app.route("/")
 def home():
+    """Render the homepage."""
     return render_template("index.html")
 
 @app.route("/chat", methods=['POST'])
 def chat():
+    """Handle chatbot queries."""
     if request.method == 'POST':
         query = request.json.get('query', '').strip()
         if not query:
