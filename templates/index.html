@@ -18,9 +18,9 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            width: 94.5%;
+            width: 95%;
             max-width: 850px;
-            height: 88vh;
+            height: 89vh;
             margin: 20px auto;
             background-color: #fdffe5;
             border-radius: 20px;
@@ -45,31 +45,34 @@
             flex-direction: column;
             overflow-x: auto;
             padding-right: 10px;
+            gap: 15px;
         }
 
         .chat-message {
             display: flex;
-            align-items: flex-start;
-            max-width:500px;
-            padding: 12px;
+            align-items: center;
+            max-width: 500px;
+            padding: 15px;
             border-radius: 20px;
-            font-size: 20px;
-            line-height: 1.5;
+            font-size: 18px;
+            line-height: 1.6;
             word-wrap: break-word;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
 
         .chat-message.user {
-            background-color: #3fff85;
-            align-self: flex-start; /* Aligning user messages to the left */
-            border: 0.2px solid #acacac;
+            background-color: #48ff70;
+            align-self: flex-start;
+            border: 1px solid #acacac;
+            border-radius: 30px 30px 10px 30px;
         }
 
         .chat-message.bot {
             background-color: #ffffff;
-            align-self: flex-end; /* Aligning bot messages to the right */
-            border: 0.2px solid #acacac;
-
+            align-self: flex-end;
+            border: 1px solid #acacac;
+            border-radius: 30px 30px 30px 10px;
         }
 
         .chat-footer {
@@ -111,7 +114,7 @@
             align-items: center;
             justify-content: center;
             transition: background-color 0.3s ease;
-            margin-left: 10px; /* Add margin to separate the button from the input */
+            margin-left: 10px;
         }
 
         .send-button i {
@@ -158,12 +161,12 @@
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
             .chat-container {
-                margin: 10px;
-                height: 92vh;
+                margin: 9px;
+                height: 93vh;
             }
 
             .form-control {
-                width: 70%;
+                width: 80%;
             }
 
             .send-button {
@@ -274,6 +277,13 @@
             }
         }
     });
+    function copyCode(button) {
+    const codeBlock = button.nextElementSibling.textContent;
+    navigator.clipboard.writeText(codeBlock).then(() => {
+        button.textContent = "Copied!";
+        setTimeout(() => (button.textContent = "Copy"), 2000);
+    });
+}
 </script>
 
 </body>
