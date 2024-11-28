@@ -30,7 +30,35 @@ medical_terms = [
     "medicine", "health", "disease", "surgery", "doctor", "patient", 
     "medication", "therapy", "hospital", "paracetamol", "aspirin", "cancer", 
     "treatment", "symptom", "prescription", "diagnosis", "infection", 
-    "vaccine", "antibiotics", "flu", "heart disease", "mental health", "injury", "cure","cures" 
+    "vaccine", "antibiotics", "flu", "heart disease", "mental health", "injury", "cure","cures","fever", 
+     "abrasion", "amputation", "ankle sprain", "back strain", "bee sting", "black eye", 
+    "blood clot", "bone fracture", "bruise", "burn", "car accident", "chickenpox", "cold", 
+    "concussion", "corneal abrasion", "cut", "dental abscess", "diarrhea", "dislocated joint", 
+    "dog bite", "earache", "eczema", "electric shock", "eye infection", "fainting", "fever", 
+    "flu", "food poisoning", "gallstones", "gastroenteritis", "gout", "hand, foot, and mouth disease", 
+    "hangover", "headache", "heart attack", "heat stroke", "hepatitis", "herpes", "hives", 
+    "insect bite", "kidney stones", "laceration", "lyme disease", "malaria", "measles", 
+    "meningitis", "migraine", "mononucleosis", "motion sickness", "multiple sclerosis", 
+    "muscle strain", "nosebleed", "poison ivy", "poison oak", "poison sumac", "rabies", 
+    "rash", "respiratory infection", "ringworm", "rocky mountain spotted fever", "salmonella", 
+    "scarlet fever", "sepsis", "shingles", "sinus infection", "skin cancer", "snakebite", 
+    "sore throat", "spider bite", "sprain", "stroke", "sunburn", "tetanus", "tick bite", 
+    "toothache", "tonsillitis", "traumatic brain injury", "tuberculosis", "urinary tract infection", 
+    "vertigo", "viral infection", "vomiting", "whooping cough",
+    
+    # Specialized terms
+    "cancer", "paracetamol", "aspirin", "heart disease", "diabetes", "hypertension", "arthritis", 
+    "asthma", "stroke", "cyst", "tumor", "radiation", "chemotherapy", "neurosurgery", 
+    "psychology", "psychiatry", "antidepressant", "anxiety", "depression", "PTSD", "Alzheimer's", 
+    "Parkinson's", "insulin", "colitis", "bronchitis", "pneumonia", "fibromyalgia", 
+    "lupus", "osteoporosis", "biopsy", "stem cell therapy", "gene therapy", "anesthesia",
+    
+    # Additional healthcare-related terms
+    "pharmacy", "ambulance", "emergency", "ICU", "pediatrics", "geriatrics", "obstetrics", 
+    "gynecology", "orthopedics", "oncology", "cardiology", "neurology", "dermatology", 
+    "radiology", "dental care", "dialysis", "prosthesis", "rehabilitation", "clinical trial", 
+    "public health", "epidemic", "pandemic", "contagion", "healthcare system", 
+    "hospitalization", "vaccination", "childbirth", "prenatal care", "postpartum care"
 ]
 
 matcher = PhraseMatcher(nlp.vocab)
