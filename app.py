@@ -9,9 +9,11 @@ from html import escape
 from pygments import highlight
 from pygments.lexers import guess_lexer, PythonLexer
 from pygments.formatters import HtmlFormatter
+import spacy  # For medical query detection
+from spacy.matcher import PhraseMatcher
 
 # Google Generative AI API Key
-API_KEY = "AIzaSyAbmkh8cRl9OpBs5MpmB3mGjXsusV-BtUo"
+API_KEY =  "AIzaSyAbmkh8cRl9OpBs5MpmB3mGjXsusV-BtUo"
 
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel('gemini-pro')
@@ -20,11 +22,30 @@ chat_model = model.start_chat(history=[])
 app = Flask(__name__, static_folder='static')
 CORS(app)
 
-# List of prohibited words for query filtering
-DISALLOWED_WORDS = [
-    "adult", "sex", "porn", "nude", "xxx", "bikini", "lust",
-    "ullu", "xhamster", "boobs", "rape", "fuck", "boob", "hot"
+# Load spaCy model for NLP
+nlp = spacy.load("en_core_web_sm")
+
+# List of common medical-related terms
+medical_terms = [
+    "medicine", "health", "disease", "surgery", "doctor", "patient", 
+    "medication", "therapy", "hospital", "paracetamol", "aspirin", "cancer", 
+    "treatment", "symptom", "prescription", "diagnosis", "infection", 
+    "vaccine", "antibiotics", "flu", "heart disease", "mental health", "injury", "cure","cures" 
 ]
+
+matcher = PhraseMatcher(nlp.vocab)
+# Add medical terms to matcher
+patterns = [nlp.make_doc(term) for term in medical_terms]
+matcher.add("MedicalTerms", patterns)
+
+# Function to detect medical-related queries
+def is_medical_query(query):
+    doc = nlp(query)
+    matches = matcher(doc)
+    return len(matches) > 0
+
+# Define DISALLOWED_WORDS list
+DISALLOWED_WORDS = ["violation", "harmful", "inappropriate", "dangerous", "offensive", "abuse"]
 
 def contains_prohibited_content(text):
     """Check if the text contains prohibited content."""
@@ -37,17 +58,11 @@ def contains_prohibited_content(text):
 def apply_syntax_highlighting(code):
     """Apply syntax highlighting using Pygments."""
     try:
-        # Guess the language of the code
         lexer = guess_lexer(code)
     except Exception:
-        # Fallback to Python lexer if the language cannot be determined
         lexer = PythonLexer()
-
-    # Highlight the code using HTML formatter
-    formatter = HtmlFormatter(style="monokai", nowrap=True)  # Use 'monokai' style
+    formatter = HtmlFormatter(style="monokai", nowrap=True)
     highlighted_code = highlight(code, lexer, formatter)
-
-    # Wrap in a styled container
     return f"""
 <div style='position: relative; background-color: #171717; padding: 20px; border-radius: 12px; margin-bottom: 20px;'>
   <button onclick="copyCode(this)" style="position: absolute; top: 10px; right: 10px; background: #007BFF; color: #fff; border: none; padding: 5px 10px; border-radius: 12px; cursor: pointer;">Copy</button>
@@ -110,8 +125,14 @@ def chat():
             return jsonify({"response": "Please enter something!"})
         if contains_prohibited_content(query):
             return jsonify({"response": "Your query contains inappropriate content. Please try again with appropriate language."})
+        
+        # Check if the query is medical-related
+        if not is_medical_query(query):
+            return jsonify({"response": "Hi , I am a medical AI. I only respond to medical-related queries.I am a large language model developed by Community service project Team"})
+
         try:
             if any(word in query.lower() for word in ["image", "photo", "logo"]):
+                # If the query contains a medical-related term and requests an image
                 image_url = get_top_image(query)
                 if image_url:
                     download_link = f"<a href='{image_url}' download='image.png' target='_blank' style='display: block; margin-top: 10px; text-align: center; text-decoration: none; color: #007BFF;'>View Image</a>"
