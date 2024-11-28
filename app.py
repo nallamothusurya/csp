@@ -9,11 +9,9 @@ from html import escape
 from pygments import highlight
 from pygments.lexers import guess_lexer, PythonLexer
 from pygments.formatters import HtmlFormatter
-import spacy  # For medical query detection
-from spacy.matcher import PhraseMatcher
 
 # Google Generative AI API Key
-API_KEY =  "AIzaSyAbmkh8cRl9OpBs5MpmB3mGjXsusV-BtUo"
+API_KEY = "AIzaSyAbmkh8cRl9OpBs5MpmB3mGjXsusV-BtUo"
 
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel('gemini-pro')
@@ -22,11 +20,8 @@ chat_model = model.start_chat(history=[])
 app = Flask(__name__, static_folder='static')
 CORS(app)
 
-# Load spaCy model for NLP
-nlp = spacy.load("en_core_web_sm")
-
 # List of common medical-related terms
-medical_terms = [
+MEDICAL_TERMS = [
     "medicine", "health", "disease", "surgery", "doctor", "patient", 
     "medication", "therapy", "hospital", "paracetamol", "aspirin", "cancer", 
     "treatment", "symptom", "prescription", "diagnosis", "infection", 
@@ -59,18 +54,13 @@ medical_terms = [
     "radiology", "dental care", "dialysis", "prosthesis", "rehabilitation", "clinical trial", 
     "public health", "epidemic", "pandemic", "contagion", "healthcare system", 
     "hospitalization", "vaccination", "childbirth", "prenatal care", "postpartum care"
+
 ]
 
-matcher = PhraseMatcher(nlp.vocab)
-# Add medical terms to matcher
-patterns = [nlp.make_doc(term) for term in medical_terms]
-matcher.add("MedicalTerms", patterns)
-
-# Function to detect medical-related queries
 def is_medical_query(query):
-    doc = nlp(query)
-    matches = matcher(doc)
-    return len(matches) > 0
+    """Check if the query contains any medical-related terms."""
+    query_lower = query.lower()
+    return any(term in query_lower for term in MEDICAL_TERMS)
 
 # Define DISALLOWED_WORDS list
 DISALLOWED_WORDS = ["violation", "harmful", "inappropriate", "dangerous", "offensive", "abuse"]
@@ -78,10 +68,7 @@ DISALLOWED_WORDS = ["violation", "harmful", "inappropriate", "dangerous", "offen
 def contains_prohibited_content(text):
     """Check if the text contains prohibited content."""
     text_lower = text.lower()
-    for word in DISALLOWED_WORDS:
-        if word in text_lower:
-            return True
-    return False
+    return any(word in text_lower for word in DISALLOWED_WORDS)
 
 def apply_syntax_highlighting(code):
     """Apply syntax highlighting using Pygments."""
@@ -156,7 +143,7 @@ def chat():
         
         # Check if the query is medical-related
         if not is_medical_query(query):
-            return jsonify({"response": "Hi , I am a medical AI. I only respond to medical-related queries.I am a large language model developed by Community service project Team"})
+            return jsonify({"response": "Hi, I am a medical AI. I only respond to medical-related queries. I am a large language model developed by the Community Service Project Team."})
 
         try:
             if any(word in query.lower() for word in ["image", "photo", "logo"]):
