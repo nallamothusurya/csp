@@ -5,12 +5,7 @@ from bs4 import BeautifulSoup
 import requests
 from flask_cors import CORS
 import re
-from html import escape
-from pygments import highlight
-from pygments.lexers import guess_lexer, PythonLexer
-from pygments.formatters import HtmlFormatter
 
-# Google Generative AI API Key
 API_KEY = "AIzaSyAbmkh8cRl9OpBs5MpmB3mGjXsusV-BtUo"
 
 genai.configure(api_key=API_KEY)
@@ -20,98 +15,60 @@ chat_model = model.start_chat(history=[])
 app = Flask(__name__, static_folder='static')
 CORS(app)
 
-# List of common medical-related terms
-MEDICAL_TERMS = [
-    "medicine", "health", "disease", "surgery", "doctor", "patient", 
-    "medication", "therapy", "hospital", "paracetamol", "aspirin", "cancer", 
-    "treatment", "symptom", "prescription", "diagnosis", "infection", 
-    "vaccine", "antibiotics", "flu", "heart disease", "mental health", "injury", "cure","cures","fever", 
-     "abrasion", "amputation", "ankle sprain", "back strain", "bee sting", "black eye", 
-    "blood clot", "bone fracture", "bruise", "burn", "car accident", "chickenpox", "cold", 
-    "concussion", "corneal abrasion", "cut", "dental abscess", "diarrhea", "dislocated joint", 
-    "dog bite", "earache", "eczema", "electric shock", "eye infection", "fainting", "fever", 
-    "flu", "food poisoning", "gallstones", "gastroenteritis", "gout", "hand, foot, and mouth disease", 
-    "hangover", "headache", "heart attack", "heat stroke", "hepatitis", "herpes", "hives", 
-    "insect bite", "kidney stones", "laceration", "lyme disease", "malaria", "measles", 
-    "meningitis", "migraine", "mononucleosis", "motion sickness", "multiple sclerosis", 
-    "muscle strain", "nosebleed", "poison ivy", "poison oak", "poison sumac", "rabies", 
-    "rash", "respiratory infection", "ringworm", "rocky mountain spotted fever", "salmonella", 
-    "scarlet fever", "sepsis", "shingles", "sinus infection", "skin cancer", "snakebite", 
-    "sore throat", "spider bite", "sprain", "stroke", "sunburn", "tetanus", "tick bite", 
-    "toothache", "tonsillitis", "traumatic brain injury", "tuberculosis", "urinary tract infection", 
-    "vertigo", "viral infection", "vomiting", "whooping cough",
-    
-    # Specialized terms
-    "cancer", "paracetamol", "aspirin", "heart disease", "diabetes", "hypertension", "arthritis", 
-    "asthma", "stroke", "cyst", "tumor", "radiation", "chemotherapy", "neurosurgery", 
-    "psychology", "psychiatry", "antidepressant", "anxiety", "depression", "PTSD", "Alzheimer's", 
-    "Parkinson's", "insulin", "colitis", "bronchitis", "pneumonia", "fibromyalgia", 
-    "lupus", "osteoporosis", "biopsy", "stem cell therapy", "gene therapy", "anesthesia",
-    
-    # Additional healthcare-related terms
-    "pharmacy", "ambulance", "emergency", "ICU", "pediatrics", "geriatrics", "obstetrics", 
-    "gynecology", "orthopedics", "oncology", "cardiology", "neurology", "dermatology", 
-    "radiology", "dental care", "dialysis", "prosthesis", "rehabilitation", "clinical trial", 
-    "public health", "epidemic", "pandemic", "contagion", "healthcare system", 
-    "hospitalization", "vaccination", "childbirth", "prenatal care", "postpartum care"
-
+DISALLOWED_WORDS = [
+    "adult", "sex", "porn", "nude", "xxx", "bikini", "lust",
+    "ullu", "xhamster", "boobs", "rape", "fuck", "boob"
 ]
 
-def is_medical_query(query):
-    """Check if the query contains any medical-related terms."""
-    query_lower = query.lower()
-    return any(term in query_lower for term in MEDICAL_TERMS)
-
-# Define DISALLOWED_WORDS list
-DISALLOWED_WORDS = ["violation", "harmful", "inappropriate", "dangerous", "offensive", "abuse"]
-
 def contains_prohibited_content(text):
-    """Check if the text contains prohibited content."""
     text_lower = text.lower()
-    return any(word in text_lower for word in DISALLOWED_WORDS)
-
-def apply_syntax_highlighting(code):
-    """Apply syntax highlighting using Pygments."""
-    try:
-        lexer = guess_lexer(code)
-    except Exception:
-        lexer = PythonLexer()
-    formatter = HtmlFormatter(style="monokai", nowrap=True)
-    highlighted_code = highlight(code, lexer, formatter)
-    return f"""
-<div style='position: relative; background-color: #171717; padding: 20px; border-radius: 12px; margin-bottom: 20px;'>
-  <button onclick="copyCode(this)" style="position: absolute; top: 10px; right: 10px; background: #007BFF; color: #fff; border: none; padding: 5px 10px; border-radius: 12px; cursor: pointer;">Copy</button>
-  <pre style='color: #f8f8f2; font-family: "Consolas", "Courier New", "Courier", monospace;
- font-size: 1rem; white-space: pre-wrap; word-wrap: break-word;' class='code-content'>
-{highlighted_code}
-  </pre>
-</div>
-"""
+    for word in DISALLOWED_WORDS:
+        if word in text_lower:
+            return True
+    return False
 
 def format_response(gemini_response):
-    """Format the Gemini response with code highlighting."""
     formatted_response = ""
     lines = gemini_response.split('\n')
-    in_code_block = False
-    code_block_content = []
-
+    in_code_block = False  # Track if we are inside a code block
+    
     for line in lines:
         line = line.strip()
-        if line.startswith("```"):
+        if line.startswith("```"):  # Start or end of a code block
             in_code_block = not in_code_block
-            if not in_code_block:
-                # Process the code block content when closing the block
-                highlighted_code = apply_syntax_highlighting("\n".join(code_block_content))
-                formatted_response += highlighted_code
-                code_block_content = []
+            if in_code_block:
+                # Start of the code block with a "Copy" button
+                formatted_response += """
+<div style='position: relative; background-color: #1e1e1e; padding: 45px; border-radius: 12px; margin-bottom: 20px;'>
+  <button onclick="copyCode(this)" style="position: absolute; top: 10px; right: 10px; background: #007BFF; color: #fff; border: none; padding: 5px 10px; border-radius: 12px; cursor: pointer;">Copy</button>
+  <pre style='color: #f8f8f2; font-family: "Courier New", Courier, monospace; font-size: 1rem; white-space: pre-wrap; word-wrap: break-word;' class='code-content'>
+"""
+            else:
+                formatted_response += "</pre></div>"
         elif in_code_block:
-            code_block_content.append(line)
-        else:
+            formatted_line = apply_syntax_highlighting(line)
+            formatted_response += f"{formatted_line}\n"
+        elif line.lower().startswith("heading") or line.lower().startswith("title"):
+            formatted_response += f"## **{line}**\n\n"
+        elif line.lower().startswith("point") or line.lower().startswith("•") or line.startswith("-"):
+            formatted_response += f"- {line.lstrip('-•').strip()}\n"
+        elif line:
             formatted_response += f"{line}\n\n"
     return formatted_response
 
+def apply_syntax_highlighting(code):
+    # Define general patterns for multiple languages
+    keywords = r'\b(def|class|if|else|elif|for|while|import|from|try|except|return|break|continue|function|var|let|const|print|echo|public|private|protected|static|void|new|extends|implements|print)\b'
+    strings = r'(\"[^\"]*\"|\'[^\']*\')'  # Match both double and single-quoted strings
+    comments = r'(#.*|\/\/.*|\/\*[\s\S]*?\*\/)'  # Match Python, JavaScript, and C-style comments
+
+    # Apply syntax highlighting
+    code = re.sub(keywords, r'<span style="color: red;">\g<0></span>', code)
+    code = re.sub(strings, r'<span style="color: red;">\g<0></span>', code)
+    code = re.sub(comments, r'<span style="color: green;">\g<0></span>', code)
+    return code
+
 def get_top_image(query):
-    """Fetch the top image for a query using Bing Image Search."""
     search_url = f"https://www.bing.com/images/search?q={query}&form=HDRSC2"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -128,26 +85,18 @@ def get_top_image(query):
 
 @app.route("/")
 def home():
-    """Render the homepage."""
     return render_template("index.html")
 
 @app.route("/chat", methods=['POST'])
 def chat():
-    """Handle chatbot queries."""
     if request.method == 'POST':
         query = request.json.get('query', '').strip()
         if not query:
             return jsonify({"response": "Please enter something!"})
         if contains_prohibited_content(query):
             return jsonify({"response": "Your query contains inappropriate content. Please try again with appropriate language."})
-        
-        # Check if the query is medical-related
-        if not is_medical_query(query):
-            return jsonify({"response": "Hi, I am a medical AI. I only respond to medical-related queries. I am a large language model developed by the Community Service Project Team."})
-
         try:
             if any(word in query.lower() for word in ["image", "photo", "logo"]):
-                # If the query contains a medical-related term and requests an image
                 image_url = get_top_image(query)
                 if image_url:
                     download_link = f"<a href='{image_url}' download='image.png' target='_blank' style='display: block; margin-top: 10px; text-align: center; text-decoration: none; color: #007BFF;'>View Image</a>"
@@ -165,4 +114,4 @@ def chat():
     return jsonify({"response": "Invalid request."})
 
 if __name__ == "__main__":
-    app.run(port=8080, debug=True)
+    app.run(port=8080, debug=True) 

@@ -13,7 +13,7 @@
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(to bottom, #23a8b7, #8f94fb);
+            background: #f2f2f2;
         }
 
         .chat-container {
@@ -24,18 +24,18 @@
             max-width: 850px;
             height: 89vh;
             margin: 20px auto;
-            background-color: #feffed;
-            border-radius: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
         .chat-header {
-            background-color: #0061F2;
+            background-color: #1877f2;
             color: #ffffff;
-            padding: 20px;
+            padding: 15px;
             text-align: center;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
         }
 
@@ -45,8 +45,6 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            overflow-x: auto;
-            padding-right: 10px;
             gap: 15px;
         }
 
@@ -56,33 +54,33 @@
             max-width: 500px;
             padding: 15px;
             border-radius: 20px;
-            font-size: 18px;
-            line-height: 1.6;
+            font-size: 16px;
+            line-height: 1.5;
             word-wrap: break-word;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             position: relative;
         }
 
         .chat-message.user {
-            background-color: #48ff70;
+            background-color: #e4f7e2;
             align-self: flex-start;
-            border: 1px solid #acacac;
+            border: 1px solid #d0d0d0;
             border-radius: 30px 30px 10px 30px;
         }
 
         .chat-message.bot {
-            background-color: #ffffff;
+            background-color: #f5f5f5;
             align-self: flex-end;
-            border: 1px solid #acacac;
+            border: 1px solid #d0d0d0;
             border-radius: 30px 30px 30px 10px;
         }
 
         .chat-footer {
             display: flex;
             justify-content: space-between;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-top: 1px solid #d6d6d6;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-top: 1px solid #e0e0e0;
             position: relative;
         }
 
@@ -96,17 +94,17 @@
             padding: 12px;
             font-size: 16px;
             border-radius: 30px;
-            border: 1px solid #818181;
-        }
-
-        .form-control:focus {
-            border-color: #0061F2;
+            border: 1px solid #ccc;
             outline: none;
         }
 
+        .form-control:focus {
+            border-color: #1877f2;
+        }
+
         .send-button {
-            background-color: #0061F2;
-            color: #fff;
+            background-color: #1877f2;
+            color: #ffffff;
             border: none;
             padding: 12px 20px;
             border-radius: 30px;
@@ -124,7 +122,7 @@
         }
 
         .send-button:hover {
-            background-color: #0052c4;
+            background-color: #1558c7;
         }
 
         /* Typing Animation */
@@ -137,7 +135,7 @@
         .dot {
             width: 10px;
             height: 10px;
-            background-color: #0061F2;
+            background-color: #1877f2;
             border-radius: 50%;
             animation: typing 1.2s infinite ease-in-out;
         }
@@ -163,21 +161,16 @@
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
             .chat-container {
-                margin: 9px;
-                height: 93vh;
+                margin: 10px;
+                height: 95vh;
             }
 
             .form-control {
-                width: 80%;
+                width: 70%;
             }
 
             .send-button {
                 width: 25%;
-            }
-
-            .chat-footer {
-                flex-direction: row;
-                justify-content: space-between;
             }
 
             .chat-header {
@@ -185,8 +178,8 @@
             }
 
             .chat-body {
-                gap: 10px;
-                padding: 10px;
+                gap: 12px;
+                padding: 15px;
             }
 
             .chat-message {
@@ -213,7 +206,7 @@
 
 <div class="chat-container">
     <div class="chat-header">
-        Medical AI For CSP
+        Camel AI
     </div>
 
     <div class="chat-body" id="chat-body">
@@ -280,13 +273,6 @@
             }
         }
     });
-    function copyCode(button) {
-    const codeBlock = button.nextElementSibling.textContent;
-    navigator.clipboard.writeText(codeBlock).then(() => {
-        button.textContent = "Copied!";
-        setTimeout(() => (button.textContent = "Copy"), 2000);
-    });
-}
 </script>
 
 </body>
