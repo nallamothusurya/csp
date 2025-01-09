@@ -3,277 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medical Bot</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='pygments.css') }}">
-
+    <title>Medical AI Assistant</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            background: #f2f2f2;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: #000000;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .chat-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            width: 95%;
-            max-width: 850px;
-            height: 89vh;
-            margin: 20px auto;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .chat-header {
-            background-color: #1877f2;
-            color: #ffffff;
-            padding: 15px;
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .chat-body {
             flex: 1;
-            padding: 20px;
-            overflow-y: auto;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+        }
+
+        .chat-box {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 250px);
         }
 
         .chat-message {
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-left: auto;
+            max-width: 80%;
+            width: fit-content;
+        }
+
+        .bot-message {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-right: auto;
+            max-width: 80%;
+            width: fit-content;
+        }
+
+        .input-container {
             display: flex;
-            align-items: center;
-            max-width: 500px;
-            padding: 15px;
-            border-radius: 20px;
-            font-size: 16px;
-            line-height: 1.5;
-            word-wrap: break-word;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            position: relative;
+            gap: 1rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        .chat-message.user {
-            background-color: #e4f7e2;
-            align-self: flex-start;
-            border: 1px solid #d0d0d0;
-            border-radius: 30px 30px 10px 30px;
+        #user-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
         }
 
-        .chat-message.bot {
-            background-color: #f5f5f5;
-            align-self: flex-end;
-            border: 1px solid #d0d0d0;
-            border-radius: 30px 30px 30px 10px;
-        }
-
-        .chat-footer {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            background-color: #f5f5f5;
-            border-top: 1px solid #e0e0e0;
-            position: relative;
-        }
-
-        .input-wrapper {
-            display: flex;
-            width: 100%;
-        }
-
-        .form-control {
-            width: 80%;
-            padding: 12px;
-            font-size: 16px;
-            border-radius: 30px;
-            border: 1px solid #ccc;
+        #user-input:focus {
             outline: none;
+            border-color: #000000;
         }
 
-        .form-control:focus {
-            border-color: #1877f2;
-        }
-
-        .send-button {
-            background-color: #1877f2;
-            color: #ffffff;
+        #send-button {
+            background: #000000;
+            color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 30px;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 1rem;
             transition: background-color 0.3s ease;
-            margin-left: 10px;
         }
 
-        .send-button i {
-            margin-right: 8px;
+        #send-button:hover {
+            background: #000000;
         }
 
-        .send-button:hover {
-            background-color: #1558c7;
+        #send-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
         }
 
-        /* Typing Animation */
-        .bot-typing {
-            display: flex;
-            gap: 6px;
-            align-items: center;
+        .loading {
+            display: none;
+            margin: 1rem auto;
+            text-align: center;
         }
 
-        .dot {
+        .loading div {
             width: 10px;
             height: 10px;
-            background-color: #1877f2;
+            background: #000000;
             border-radius: 50%;
-            animation: typing 1.2s infinite ease-in-out;
+            display: inline-block;
+            margin: 0 3px;
+            animation: bounce 0.5s infinite ease-in-out;
         }
 
-        .dot:nth-child(1) {
-            animation-delay: 0s;
+        .loading div:nth-child(2) { animation-delay: 0.1s; }
+        .loading div:nth-child(3) { animation-delay: 0.2s; }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
-        .dot:nth-child(2) {
-            animation-delay: 0.2s;
+        .markdown-body {
+            background-color: transparent !important;
         }
 
-        .dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes typing {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
-        }
-
-        /* Mobile Responsiveness */
-        @media (max-width: 768px) {
-            .chat-container {
-                margin: 10px;
-                height: 95vh;
-            }
-
-            .form-control {
-                width: 70%;
-            }
-
-            .send-button {
-                width: 25%;
-            }
-
-            .chat-header {
-                font-size: 18px;
-            }
-
-            .chat-body {
-                gap: 12px;
-                padding: 15px;
-            }
-
-            .chat-message {
-                font-size: 14px;
-            }
-        }
-
-        /* Scrollbar Styling */
-        .chat-body::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .chat-body::-webkit-scrollbar-thumb {
-            background-color: #ccc;
-            border-radius: 8px;
-        }
-
-        .chat-body::-webkit-scrollbar-thumb:hover {
-            background-color: #888;
+        .error-message {
+            color: #dc3545;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
 <body>
+    <header class="header">
+        <h1>Medical AI Assistant</h1>
+    </header>
 
-<div class="chat-container">
-    <div class="chat-header">
-        Camel AI
-    </div>
-
-    <div class="chat-body" id="chat-body">
-        <!-- Chat messages will go here -->
-        {{ response|safe }}
-    </div>
-
-    <div class="chat-footer">
-        <div class="input-wrapper">
-            <input type="text" class="form-control" id="message-input" placeholder="Type your message...">
-            <button class="send-button" id="send-button">
-                <i class="fas fa-paper-plane"></i> Send
-            </button>
+    <main class="chat-container">
+        <div class="chat-box" id="chat-box"></div>
+        
+        <div class="loading" id="loading">
+            <div></div>
+            <div></div>
+            <div></div>
         </div>
-    </div>
-</div>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script>
-    $(document).ready(function () {
-        $('#send-button').click(sendMessage);
-        $('#message-input').keypress(function (e) {
-            if (e.which === 13) sendMessage();  // Enter key triggers send
-        });
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Ask a medical question..." autocomplete="off">
+            <button id="send-button">Send</button>
+        </div>
+    </main>
 
-        function sendMessage() {
-            const userMessage = $('#message-input').val().trim();
-            if (userMessage) {
-                const chatBody = $('#chat-body');
-                chatBody.append(
-                    `<div class="chat-message user">${userMessage}</div>`
-                );
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const loading = document.getElementById('loading');
 
-                $('#message-input').val(""); // Clear the input field
-                chatBody.scrollTop(chatBody[0].scrollHeight);
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${isUser ? 'user-message' : 'bot-message'}`;
+            messageDiv.innerHTML = content;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
 
-                // Typing animation for the bot
-                chatBody.append(
-                    `<div class="bot-typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`
-                );
-                chatBody.scrollTop(chatBody[0].scrollHeight);
+        function copyCode(button) {
+            const pre = button.nextElementSibling;
+            const code = pre.textContent;
+            navigator.clipboard.writeText(code);
+            
+            const originalText = button.textContent;
+            button.textContent = 'Copied!';
+            setTimeout(() => {
+                button.textContent = originalText;
+            }, 2000);
+        }
 
-                // Simulating bot response with AJAX (mocked here for demonstration)
-                $.ajax({
-                    url: '/chat',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ query: userMessage }),
-                    success(response) {
-                        const botResponse = response.response || "Sorry, something went wrong.";
-                        $('.bot-typing').last().remove();
-                        chatBody.append(
-                            `<div class="chat-message bot">${botResponse}</div>`
-                        );
-                        chatBody.scrollTop(chatBody[0].scrollHeight);
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            userInput.value = '';
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
                     },
-                    error() {
-                        $('.bot-typing').last().remove();
-                        chatBody.append(
-                            `<div class="chat-message bot">Sorry, something went wrong.</div>`
-                        );
-                    }
+                    body: JSON.stringify({ query: message })
                 });
+
+                const data = await response.json();
+                addMessage(data.response);
+            } catch (error) {
+                addMessage(`<div class="error-message">Sorry, something went wrong. Please try again.</div>`);
+            } finally {
+                loading.style.display = 'none';
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                userInput.focus();
             }
         }
-    });
-</script>
 
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Add initial greeting
+        window.addEventListener('load', () => {
+            addMessage("Hello! I'm your Medical AI Assistant. How can I help you today?");
+        });
+    </script>
 </body>
 </html>
