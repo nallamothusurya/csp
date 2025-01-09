@@ -22,7 +22,9 @@ CORS(app)
 
 # List of common medical-related terms
 MEDICAL_TERMS = [
-    "medicine", "health", "disease", "surgery", "doctor", "patient","tablet", "pill", "prescription",
+    "medicine", "health", "disease", "surgery", "doctor", "patient","tablet", "pill", "prescription","tablets", "pills", "prescriptions",
+    "medical", "healthcare", "hospital", "clinic", "nurse", "pharmacy", "medication", "treatment", "therapy", "diagnosis", "symptoms",
+    "medicines", "diseases", "surgeries", "doctors", "patients", 
     "medication", "therapy", "hospital", "paracetamol", "aspirin", "cancer", 
     "treatment", "symptom", "prescription", "diagnosis", "infection", 
     "vaccine", "antibiotics", "flu", "heart disease", "mental health", "injury", "cure","cures","fever", 
@@ -35,6 +37,7 @@ MEDICAL_TERMS = [
     "insect bite", "kidney stones", "laceration", "lyme disease", "malaria", "measles", 
     "meningitis", "migraine", "mononucleosis", "motion sickness", "multiple sclerosis", 
     "muscle strain", "nosebleed", "poison ivy", "poison oak", "poison sumac", "rabies", 
+    "diabetes", "hypertension", "arthritis", "asthma", "stroke", "cyst", "tumor", "radiation",
     "rash", "respiratory infection", "ringworm", "rocky mountain spotted fever", "salmonella", 
     "scarlet fever", "sepsis", "shingles", "sinus infection", "skin cancer", "snakebite", 
     "sore throat", "spider bite", "sprain", "stroke", "sunburn", "tetanus", "tick bite", 
